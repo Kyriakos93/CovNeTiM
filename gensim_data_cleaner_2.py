@@ -1,4 +1,10 @@
-# Apply a first round of text cleaning techniques
+""" Dataset Cleaner
+
+Cleans the given covid news dataset of a source from unwanted text indices, punctuation and
+pre-defined text references. During cleaning, it marks the given dataset with semantic tags
+focused on covid news numeric references and others.
+"""
+
 import argparse
 import re
 import string
@@ -75,7 +81,7 @@ def clean_word_grouping(text):
 # - [COVCURRENCY] .. Currency amounts references
 # - [COVDOSE] .. Numbers having mg, milligrams, g, grams
 # - [COVMEASURES] .. Numbers having cm, centimeters, m, meters, km, kilometers
-# - [COVAGE] .. Age
+# - [COVAGE] .. Age references
 def clean_numbers(text):
     # remove nan values
     if str(text)=='nan':
@@ -88,103 +94,27 @@ def clean_numbers(text):
         text = re.sub(r'coronavirus', ' [COVCODENAME] ', text)
 
         # Currency reference
-        #TODO: REPLACE WITH THE NEW COMPACT PATTERN --> DONE
-
-        # text = re.sub(r'\d+(,)*\d+ euros', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'\d+(,)*\d+ euro', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'\d+(,)*\d+ eur', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'\d+(,)*\d+ dollars', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'\d+(,)*\d+ dollar', ' [COVCURRENCY] ', text)
-        # `text = re.sub(r'\d+(,)*\d+ usd', ' [COVCURRENCY] ', text)`
-
         text = re.sub(r'(\$|\€|\£){1} ?\d+\.?\d* ?(m|bn|million|billion|trillion)', ' [COVCURRENCY] ', text)
         text = re.sub(r'\d+\.?\d* ?(m|bn|million|billion|trillion)', ' [COVCURRENCY] ', text)
         text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(m|bn|million|billion|trillion)? ?(\$|\€|\£)', ' [COVCURRENCY] ', text)
         text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(euro(s)?|dollar(s)?|pound(s)?|eur|EUR|usd|USD|gbp|GBP)', ' [COVCURRENCY] ', text)
 
-        # TODO: MAYBE REMOVE THIS SECTION --> DONE --> ?
-        # TODO: [!] CHECK FOR EROORS
-        # text = re.sub(r'[ ^\]]+ euros', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'[ ^\]]+ euro', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'[ ^\]]+ eur', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'[ ^\]]+ dollars', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'[ ^\]]+ dollar', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'[ ^\]]+ usd', ' [COVCURRENCY] ', text)
-
-        # TODO: REPLACE WITH THE NEW COMPACT PATTERNS --> DONE
-        # text = re.sub(r'€[ ^\]]+', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'\$[ ^\]]+', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'\d+(,)*\d+ €', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'\d+(,)*\d+€', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'€\d+(,)*\d+', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'€ \d+(,)*\d+', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'\d+(,)*\d+ \$', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'\d+(,)*\d+\$', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'\$\d+(,)*\d+', ' [COVCURRENCY] ', text)
-        # text = re.sub(r'\$ \d+(,)*\d+', ' [COVCURRENCY] ', text)
-
         # - [COVDOSE] .. Numbers having mg, milligrams, g, grams
         # - [COVMEASURES] .. Numbers having cm, centimeters, m, meters, k, kilometers
 
         # Numbers having mg, milligrams, g, grams
-        # TODO: REPLACE WITH THE NEW COMPACT PATTERN --> DONE
-        # text = re.sub(r'\d+ mg\b', ' [COVDOSE] ', text)
-        # text = re.sub(r'\d+mg\b', ' [COVDOSE] ', text)
-        # text = re.sub(r'\d+ milligrams\b', ' [COVDOSE] ', text)
-        # text = re.sub(r'\d+ g\b', ' [COVDOSE] ', text)
-        # text = re.sub(r'\d+g\b', ' [COVDOSE] ', text)
-        # text = re.sub(r'\d+ grams\b', ' [COVDOSE] ', text)
-
         text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(mg|g|milligrams|grams)\b', ' [COVDOSE] ', text)
 
         # Numbers having cm, centimeters, m, meters, km, kilometers
-        # TODO: REPLACE WITH THE NEW COMPACT PATTERN --> DONE
-        # text = re.sub(r'\d+ cm\b', ' [COVMESAURES] ', text)
-        # text = re.sub(r'\d+cm\b', ' [COVMESAURES] ', text)
-        # text = re.sub(r'\d+ centimeters\b', ' [COVMESAURES] ', text)
-        # text = re.sub(r'\d+ m\b', ' [COVMESAURES] ', text)
-        # text = re.sub(r'\d+m\b', ' [COVMESAURES] ', text)
-        # text = re.sub(r'\d+ meters\b', ' [COVMESAURES] ', text)
-        # text = re.sub(r'\d+ km\b', ' [COVMESAURES] ', text)
-        # text = re.sub(r'\d+km\b', ' [COVMESAURES] ', text)
-        # text = re.sub(r'\d+ kilometers\b', ' [COVMESAURES] ', text)
-
         text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(mm|cm|m|km|millimeter(s)?|millimetre(s)?|centimeter(s)?|centimetre(s)?|meter(s)?|metre(s)?|kilometer(s)?|kilometre(s)?)\b', ' [COVMESAURES] ', text)
         text = re.sub(r'\d+(\,\d+)? ?feet', ' [COVMESAURES] ', text)
         text = re.sub(r'\d{1,2} ?inch(es)?', ' [COVMESAURES] ', text)
 
         # Time reference
-        # TODO: REPLACE WITH THE NEW COMPACT PATTERN [Improved version] --> DONE
-        # text = re.sub(r'\d+(,)*\d+ hours', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(,)*\d+ hour', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(,)*\d+ minutes', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(,)*\d+ minute', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(,)*\d+ seconds', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(,)*\d+ second', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(,)*\d+ days', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(,)*\d+ day', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(,)*\d+ months', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(,)*\d+ month', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(,)*\d+ years', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(,)*\d+ year', ' [COVTIME] ', text)
-
         text = re.sub(r'(\d{1,2}\:\d{2}( ?(a\.?m\.?|p\.?m\.?))?( ?[a-zA-Z]{3,4}((\-|\+)\d{1,2})?)?)|(\d{1,2}( ?(a\.?m\.?|p\.?m\.?)){1}( ?[a-zA-Z]{3,4}((\-|\+)\d{1,2})?)?)', ' [COVTIME] ', text)
         text = re.sub(r'\d+(\,|\.)?(\d+)? ?(year(s)?|day(s)?|month(s)?|week(s)?)', ' [COVTIME] ', text)
         text = re.sub(r'\d+(\-| )?(hour(s)?|minute(s)?|second(s)?|millisecond(s)?)', ' [COVTIME] ', text)
         text = re.sub(r'\d+(\-| )?day', ' [COVTIME] ', text)
-
-        # Timezone reference aggregated as time
-        # TODO: REPLACE WITH THE NEW COMPACT PATTERN --> DONE
-        # text = re.sub(r'\d+(:)*\d+ gmt', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(:)*\d+ utc', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(:)*\d+ eest', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(:)*\d+ est', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(:)*\d+ cst', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(:)*\d+ ast', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(:)*\d+ mst', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(:)*\d+ pst', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(:)*\d+ akst', ' [COVTIME] ', text)
-        # text = re.sub(r'\d+(:)*\d+ hst', ' [COVTIME] ', text)
 
         # Date reference
         # TODO: INCLUDE ADDITIONAL PATTERNS (eg. 9/11, 11/2020) --> DONE
@@ -196,145 +126,48 @@ def clean_numbers(text):
         text = re.sub(r'\d+(/)+\d+(/)+\d+', ' [COVDATE] ', text)
 
         # Year reference
-        # TODO: REPLACE WITH THE NEW COMPACT PATTERN [improved version] --> DONE
-        # text = re.sub(r'2019', ' [COVYEAR] ', text)
-        # text = re.sub(r'2020', ' [COVYEAR] ', text)
-        # text = re.sub(r'2021', ' [COVYEAR] ', text)
-
         text = re.sub(r'(1900|2000)s', ' [COVYEAR] ', text)
         text = re.sub(r'(20\d{2})|(19\d{2})', ' [COVYEAR] ', text)
 
 
         # Day reference
-        # TODO: REPLACE WITH THE NEW COMPACT PATTERN --> DONE
-        # text = re.sub(r'monday', ' [COVDAY] ', text)
-        # text = re.sub(r'tuesday', ' [COVDAY] ', text)
-        # text = re.sub(r'wednesday', ' [COVDAY] ', text)
-        # text = re.sub(r'thursday', ' [COVDAY] ', text)
-        # text = re.sub(r'friday', ' [COVDAY] ', text)
-        # text = re.sub(r'saturday', ' [COVDAY] ', text)
-        # text = re.sub(r'sunday', ' [COVDAY] ', text)
-
         text = re.sub(r'((M|m)onday|(T|t)uesday|(W|w)ednesday|(T|t)hursday|(F|f)riday|(S|s)aturday|(S|s)unday)', ' [COVDAY] ', text)
 
         # Month reference
-        # TODO: REPLACE WITH THE NEW COMPACT PATTERN --> DONE
-        # text = re.sub(r'january', ' [COVMONTH] ', text)
-        # text = re.sub(r'february', ' [COVMONTH] ', text)
-        # text = re.sub(r'march', ' [COVMONTH] ', text)
-        # text = re.sub(r'april', ' [COVMONTH] ', text)
-        # text = re.sub(r'may', ' [COVMONTH] ', text)
-        # text = re.sub(r'june', ' [COVMONTH] ', text)
-        # text = re.sub(r'july', ' [COVMONTH] ', text)
-        # text = re.sub(r'august', ' [COVMONTH] ', text)
-        # text = re.sub(r'september', ' [COVMONTH] ', text)
-        # text = re.sub(r'october', ' [COVMONTH] ', text)
-        # text = re.sub(r'november', ' [COVMONTH] ', text)
-        # text = re.sub(r'december', ' [COVMONTH] ', text)
-
         text = re.sub(r'(J|j)anuary|(F|f)ebruary|(M|m)arch|(A|a)pril|(M|m)ay|(J|j)une|(J|j)uly|(A|a)ugust|(S|s)eptember|(O|o)ctober|(N|n)ovember|(D|d)ecember', ' [COVMONTH] ', text)
 
-        # TODO: ADD AGE REFERENCES --> DONE
         # Age References
         text = re.sub(r'(\d{1,2}\-year\-old)|(\d{1,2} year(s)? old)', ' [COVAGE] ', text)
         text = re.sub(r'mid\-(\d{1}(0s){1})', ' [COVAGE] ', text)
         text = re.sub(r'\d{1}0{1}s{1}', ' [COVAGE] ', text)
 
         # Other semantics on covid numeric references
-        # TODO: REPLACE WITH THE NEW COMPACT PATTERN --> DONE
-        # text = re.sub(r'\d+(,)*\d+%', ' [COVPERCENTAGE] ', text)
-        # text = re.sub(r'\d+(.)*\d+%', ' [COVPERCENTAGE] ', text)
-        # text = re.sub(r'\d+(,)*\d+ percent', ' [COVPERCENTAGE] ', text)
-        # text = re.sub(r'\d+(.)*\d+ percent', ' [COVPERCENTAGE] ', text)
-
         text = re.sub(r'\d+((\,|\.)\d+)? ?(percent|\%)', ' [COVPERCENTAGE] ', text)
 
-        # TODO: REPLACE WITH THE NEW COMPACT PATTERN [improved verrsion] --> DONE
-        # text = re.sub(r'\d+,\d+ deaths', ' [COVDEATHS] ', text)
-        # text = re.sub(r'\d+ deaths', ' [COVDEATHS] ', text)
-
+        # Coronavirus Deaths references
         text = re.sub(r'\d+( new)?( coronavirus)? death(s)?\b', ' [COVDEATHS] ', text)
 
-        # TODO: REPLACE WITH THE NEW COMPACT PATTERN [improved version] --> DONE
-        # text = re.sub(r'\d+,\d+ tests', ' [COVTESTS] ', text)
-        # text = re.sub(r'\d+ tests', ' [COVTESTS] ', text)
-
+        # Coronavirus Tests references
         text = re.sub(r'\d+( new)?( coronavirus| covid)? test(s)?', ' [COVTESTS] ', text)
 
-        # TODO: REPLACE WITH THE NEW COMPACT PATTERN [improved version] --> DONE
-        # text = re.sub(r'\d+,\d+ cases', ' [COVCASES] ', text)
-        # text = re.sub(r'\d+ cases', ' [COVCASES] ', text)
-        # text = re.sub(r'\d+ new cases', ' [COVNEWCASES] ', text)
-        # text = re.sub(r'\d+ new case', ' [COVNEWCASES] ', text)
-
+        # Coronavirus Cases references
         text = re.sub(r'\d+((\,|\.)\d+)*( confirmed)?( coronavirus)? case(s)?', ' [COVCASES] ', text)
+
+        # Coronavirus New Cases references
         text = re.sub(r'\d+((\,|\.)\d+)* new( confirmed)?( coronavirus| covid)?( confirmed)? case(s)?', ' [COVNEWCASES] ', text)
 
-        # TODO: REPLACE WITH THE NEW COMPACT PATTERN --> DONE
-        text = re.sub(r'\bone\b(\.)?', ' [COVNUMASWORD] ', text)
-        text = re.sub(r'\btwo\b(\.)?', ' [COVNUMASWORD] ', text)
-        text = re.sub(r'\bthree\b(\.)?', ' [COVNUMASWORD] ', text)
-        text = re.sub(r'\bfour\b(\.)?', ' [COVNUMASWORD] ', text)
-        text = re.sub(r'\bfive\b(\.)?', ' [COVNUMASWORD] ', text)
-        text = re.sub(r'\bsix\b(\.)?', ' [COVNUMASWORD] ', text)
-        text = re.sub(r'\bseven\b(\.)?', ' [COVNUMASWORD] ', text)
-        text = re.sub(r'\beight\b(\.)?', ' [COVNUMASWORD] ', text)
-        text = re.sub(r'\bnine\b(\.)?', ' [COVNUMASWORD] ', text)
-        text = re.sub(r'\bten\b(\.)?', ' [COVNUMASWORD] ', text)
-
-        # TODO: REPLACE WITH THE NEW COMPACT PATTERN --> DONE
-        # text = re.sub(r'eleven', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'twelve', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'thirteen', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'fourteen', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'fifteen', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'sixteen', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'seventeen', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'eighteen', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'nineteen', ' [COVNUMASWORD] ', text)
-        #
-        # text = re.sub(r'twenty', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'thirty', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'forty', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'fifty', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'sixty', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'seventy', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'eighty', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'ninety', ' [COVNUMASWORD] ', text)
-        #
-        # text = re.sub(r'hundreds', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'thousands', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'millions', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'hundred', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'thousand', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'million', ' [COVNUMASWORD] ', text)
-        #
-        # text = re.sub(r'first', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'second', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'third', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'fourth', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'fifth', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'sixth', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'seventh', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'eighth', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'ninth', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'tenth', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'eleventh', ' [COVNUMASWORD] ', text)
-        # text = re.sub(r'twelfth', ' [COVNUMASWORD] ', text)
-
+        # Numbers references written in full-text
         text = re.sub(r'(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirdy|forty|fifty|sixty|seventy|eighty|ninety|hundred(s)?|thousand(s)?|million(s)?|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth)\b', ' [COVNUMASWORD] ', text)
 
         # Number references in parentheses and brackets
-        # TODO: REPLACE WITH THE NEW CORRECTED ONE PATTERNS --> DONE
         text = re.sub('\[\d+(\.{1,3}|\,)?\d*\]', '[BRANUM]', text)
         text = re.sub('\(\d+(\.{1,3}|\,)?\d*\)', '[PARNUM]', text)
 
-        # TODO: REPLACE BOTH BELOW WITH THE NEW CORRECTED COMPACT PATTERN --> DONE
+        # Other general numeric references
         text = re.sub('\b\d{1,3}((\,|\.)?\d{1,3}?)*\b', ' [COVNUM] ', text)
         text = re.sub('\b\d+((\.|\,)\d+)*\b', ' [COVNUM] ', text)
 
         # Other number references fused in words
-        # TODO: REPLACE WITH THE NEW CORRECTED ONE PATTERN --> DONE
         text = re.sub('[a-zA-z]+\d+[a-zA-Z]*', '[WORDNUM]', text)
         # text = re.sub('[%s]' % re.escape(string.punctuation), '', text)
     return text

@@ -1,2 +1,6 @@
 # Project exclude paths
 /venv/
+/input/
+/output/
+/pickles/
+/csvs/

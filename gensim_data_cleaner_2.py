@@ -213,11 +213,14 @@ print(
     '/_______  (____  /__| (____  /  \______  /____/\___  >____  /___|  /\___  >__|\n' +
     '        \/     \/          \/          \/          \/     \/     \/     \/       \n')
 
-print("Welcome to RISE TAG Data Cleaner v.2.0\n")
+print("Welcome to RISE TAG Data Cleaner v2.0\n")
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-file", help="Input CSV file to generate the necessary pickle files for the topic modeling", type=str)
+parser.add_argument("-file", help="Input CSV file to generate the necessary pickle files for the topic modeling",
+                    type=str)
 parser.add_argument("-export", help="Output CSV file name of the cleaned dataset", type=str)
+parser.add_argument("-generate", default=False, help="Instruct the script to generate pickled dataframes for topic "
+                                                     "modeling analysis", dest='isGenPickEnabled', action='store_true')
 args = parser.parse_args()
 
 if args.file:
@@ -305,19 +308,21 @@ data_clean = pd.DataFrame(data_clean.Content.apply(round_grouping))
 print('Done')
 # TODO: END <<<
 
-# STEP 3: Generate Document-Term Matrix
-# Create a document-term matrix using CountVectorizer, and exclude common English stop words
-print('■ Generating Document-Term Matrix using sklearn..', end='')
-cv = CountVectorizer(stop_words='english')
-data_cv = cv.fit_transform(data_clean.Content)
-data_dtm = pd.DataFrame(data_cv.toarray(), columns=cv.get_feature_names(),index=headlines)
-print(data_dtm)
-print('Done\t\t', end='')
+if args.isGenPickEnabled:
+    # STEP 3: Generate Document-Term Matrix
+    # Create a document-term matrix using CountVectorizer, and exclude common English stop words
+    print('■ Generating Document-Term Matrix using sklearn..', end='')
+    cv = CountVectorizer(stop_words='english')
+    data_cv = cv.fit_transform(data_clean.Content)
+    data_dtm = pd.DataFrame(data_cv.toarray(), columns=cv.get_feature_names(),index=headlines)
+    print(data_dtm)
+    print('Done\t\t', end='')
 
-# Save cleaned corpus
-# Let's pickle it for later use
-data_dtm.to_pickle('pickles/corpus_cl_'+filename+'.pkl')
-print('[Pickle Saved at pickles/corpus_cl_'+filename+'.pkl]')
+    # Save cleaned corpus
+
+    # Let's pickle it for later use
+    data_dtm.to_pickle('pickles/corpus_cl_'+filename+'.pkl')
+    print('[Pickle Saved at pickles/corpus_cl_'+filename+'.pkl]')
 
 if args.export:
     export_path = args.export
@@ -332,30 +337,32 @@ if args.export:
     data_exp.to_csv(export_path)
     print('Done')
 
-# STEP 4: Generate Vocabulary
+if args.isGenPickEnabled:
+    # STEP 4: Generate Vocabulary
 
-print('■ Generating Vocabulary using sklearn..', end='')
-# Read in cleaned data
-# data_clean = pd.read_pickle('data_clean.pkl')
+    print('■ Generating Vocabulary using sklearn..', end='')
+    # Read in cleaned data
+    # data_clean = pd.read_pickle('data_clean.pkl')
 
-# If more than half of the media have it as a top word, exclude it from the list (optional step for later)
-add_stop_words = ['said', 'åêåêåê']
+    # If more than half of the media have it as a top word, exclude it from the list (optional step for later)
+    add_stop_words = ['said', 'åêåêåê']
 
-# Add new stop words
-stop_words = text.ENGLISH_STOP_WORDS.union(add_stop_words)
+    # Add new stop words
+    stop_words = text.ENGLISH_STOP_WORDS.union(add_stop_words)
 
-# Todo: Debug stop words here
-# print('Stop words:\n')
-# print(cv.get_feature_names())
+    # Todo: Debug stop words here
+    # print('Stop words:\n')
+    # print(cv.get_feature_names())
 
-# Recreate document-term matrix
-cv = CountVectorizer(stop_words=stop_words)
-data_cv = cv.fit_transform(data_clean.Content)
-data_stop = pd.DataFrame(data_cv.toarray(), columns=cv.get_feature_names(), index=headlines)
+    # Recreate document-term matrix
+    cv = CountVectorizer(stop_words=stop_words)
+    data_cv = cv.fit_transform(data_clean.Content)
+    data_stop = pd.DataFrame(data_cv.toarray(), columns=cv.get_feature_names(), index=headlines)
 
-# Pickle it for later use
-pickle.dump(cv, open('pickles/cv_stop_'+filename+'.pkl', "wb"))
-data_stop.to_pickle('pickles/dtm_stop_'+filename+'.pkl')
-print('Done\t\t [Pickles Saved at pickles/cv_stop_'+filename+'.pkl and pickles/dtm_stop_'+filename+'.pkl]')
+
+    # Pickle it for later use
+    pickle.dump(cv, open('pickles/cv_stop_'+filename+'.pkl', "wb"))
+    data_stop.to_pickle('pickles/dtm_stop_'+filename+'.pkl')
+    print('Done\t\t [Pickles Saved at pickles/cv_stop_'+filename+'.pkl and pickles/dtm_stop_'+filename+'.pkl]')
 
 print('\nData Cleaner Finished. Exiting..')

@@ -295,11 +295,11 @@ data_clean = pd.DataFrame(data_clean.Content.apply(round_exclusions))
 print('Done')
 # TODO: END <<<
 
-print('■■■ Marking numeric references..', end='')
+print('■■■ Marking numeric references..')
 round_nums = lambda x: clean_numbers(x)
 
 data_clean = pd.DataFrame(data_clean.Content.swifter.apply(round_nums))
-print('Done')
+print('Marking numeric references completed.')
 
 # --<<<
 

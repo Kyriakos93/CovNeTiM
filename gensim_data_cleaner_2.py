@@ -89,7 +89,7 @@ def clean_numbers(text):
     if str(text)=='nan':
         text = re.sub('nan', '', str(text))
     else:
-        print('NEW_TEXT>>>' + text)
+        # print('NEW_TEXT>>>' + text)
         # Covid codename reference
         text = re.sub(r'covid-19', ' [COVCODENAME] ', text)
         text = re.sub(r'covid19', ' [COVCODENAME] ', text)
@@ -97,21 +97,21 @@ def clean_numbers(text):
         text = re.sub(r'coronavirus', ' [COVCODENAME] ', text)
 
         # Currency reference
-        text = re.sub(r'(\$|\€|\£){1} ?\d+\.?\d* ?(m|bn|million|billion|trillion)', ' [COVCURRENCY] ', text)
-        text = re.sub(r'\d+\.?\d* ?(m|bn|million|billion|trillion)', ' [COVCURRENCY] ', text)
-        text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(m|bn|million|billion|trillion)? ?(\$|\€|\£)', ' [COVCURRENCY] ', text)
-        text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(euro(s)?|dollar(s)?|pound(s)?|eur|EUR|usd|USD|gbp|GBP)', ' [COVCURRENCY] ', text)
+        # text = re.sub(r'(\$|\€|\£){1} ?\d+\.?\d* ?(m|bn|million|billion|trillion)', ' [COVCURRENCY] ', text)
+        # text = re.sub(r'\d+\.?\d* ?(m|bn|million|billion|trillion)', ' [COVCURRENCY] ', text)
+        # text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(m|bn|million|billion|trillion)? ?(\$|\€|\£)', ' [COVCURRENCY] ', text)
+        # text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(euro(s)?|dollar(s)?|pound(s)?|eur|EUR|usd|USD|gbp|GBP)', ' [COVCURRENCY] ', text)
 
         # - [COVDOSE] .. Numbers having mg, milligrams, g, grams
         # - [COVMEASURES] .. Numbers having cm, centimeters, m, meters, k, kilometers
 
         # Numbers having mg, milligrams, g, grams
-        text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(mg|g|milligrams|grams)\b', ' [COVDOSE] ', text)
+        # text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(mg|g|milligrams|grams)\b', ' [COVDOSE] ', text)
 
         # Numbers having cm, centimeters, m, meters, km, kilometers
-        text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(mm|cm|m|km|millimeter(s)?|millimetre(s)?|centimeter(s)?|centimetre(s)?|meter(s)?|metre(s)?|kilometer(s)?|kilometre(s)?)\b', ' [COVMESAURES] ', text)
-        text = re.sub(r'\d+(\,\d+)? ?feet', ' [COVMESAURES] ', text)
-        text = re.sub(r'\d{1,2} ?inch(es)?', ' [COVMESAURES] ', text)
+        # text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(mm|cm|m|km|millimeter(s)?|millimetre(s)?|centimeter(s)?|centimetre(s)?|meter(s)?|metre(s)?|kilometer(s)?|kilometre(s)?)\b', ' [COVMESAURES] ', text)
+        # text = re.sub(r'\d+(\,\d+)? ?feet', ' [COVMESAURES] ', text)
+        # text = re.sub(r'\d{1,2} ?inch(es)?', ' [COVMESAURES] ', text)
 
         # Time reference
         text = re.sub(r'(\d{1,2}\:\d{2}( ?(a\.?m\.?|p\.?m\.?))?( ?[a-zA-Z]{3,4}((\-|\+)\d{1,2})?)?)|(\d{1,2}( ?(a\.?m\.?|p\.?m\.?)){1}( ?[a-zA-Z]{3,4}((\-|\+)\d{1,2})?)?)', ' [COVTIME] ', text)

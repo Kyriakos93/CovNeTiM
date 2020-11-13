@@ -4,7 +4,7 @@ Removes the duplicated (identical) or similar articles that refer to an identica
 generates a new CSV file free from duplications.
 
 Usage: python3 duplicates_remover.py -file [input_filepath] -export [output_filepath] -threshold 0.80
-Note: It's recommended to use the similarity of 0.80 thas seems to refers to the same article and better perform
+Note: It's recommended to use the similarity of 0.80 seems to refer to the same article and better perform
 
 """
 import argparse
@@ -12,9 +12,9 @@ import argparse
 import pandas as pd
 import textdistance
 
-filepath = 'input/ansa_final_content.csv'
-similarity_threshold = 0.80
-export_path = 'output/ansa_final_content_dup_cn.csv'
+filepath = None
+similarity_threshold = 0.80 # default
+export_path = None
 
 print(
 '________               .__  .__               __                  __________                                         \n'+
@@ -34,9 +34,17 @@ args = parser.parse_args()
 
 if args.file:
     filepath = args.file
+else:
+    print('[!] Input file path not provided. Please provide the valid options to run the script.'
+          '\nDuplicate Remover is terminated.')
+    exit()
 
 if args.export:
     export_path = args.export
+else:
+    print('[!] Output file path not provided. Please provide the valid options to run the script.'
+          '\nDuplicate Remover is terminated.')
+    exit()
 
 if args.threshold:
     similarity_threshold = args.threshold

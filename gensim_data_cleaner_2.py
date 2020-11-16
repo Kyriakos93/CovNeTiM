@@ -43,11 +43,14 @@ def clean_exclusions(text):
     if str(text)=='nan':
         text = re.sub('nan', '', str(text))
     else:
-        # The Guardian Pre-specified Exclusions
-        text = re.sub(r'^(last modified on |first published on )?(mon|tue|wed|thu|fri|sat|sun) \d{1,2} (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec) \d{4} \d{1,2}\.\d{1,2}\s[a-zA-Z]{3,4}\b(\n|\r|\r\n)', '', text)
+        # The Guardian Pre-defined Exclusions
+        # text = re.sub(r'^(last modified on |first published on )?(mon|tue|wed|thu|fri|sat|sun) \d{1,2} (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec) \d{4} \d{1,2}\.\d{1,2}\s[a-zA-Z]{3,4}\b(\n|\r|\r\n)', '', text)
+        text = re.sub(r'(last modified on |first published on )?(mon|tue|wed|thu|fri|sat|sun) \d{1,2} (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec) \d{4} \d{1,2}\.\d{1,2}\s[a-zA-Z]{3,4}', '', text)
+        # ANSA Pre-defined Exclusions
         text = re.sub(r'åêåêåê', ' ', text)
         text = re.sub(r'åêåêåê', ' ', text)
         text = re.sub(r'				', ' ', text)
+        # NYT Pre-defined Exclusions
         text = re.sub(r'supported by', '', text)
 
         # Remove unwanted tokens causing Catastrophic Backtracking for Regular Expressions
@@ -103,7 +106,9 @@ def clean_numbers(text):
     if str(text)=='nan':
         text = re.sub('nan', '', str(text))
     else:
+        # Debug input string
         # print('NEW_TEXT>>>' + text)
+
         # Covid codename reference
         text = re.sub(r'covid-19', ' [COVCODENAME] ', text)
         text = re.sub(r'covid19', ' [COVCODENAME] ', text)
@@ -205,14 +210,12 @@ def clean_text_round1(text):
 # Apply a second round of cleaning
 def clean_text_round2(text):
     '''Get rid of some additional punctuation and non-sensical text that was missed the first time around.'''
-    text = re.sub('[‘’“”…]', '', text)
+    text = re.sub('[‘’“”…—・]', '', text)
     text = re.sub('\n', ' ', text) #TODO: Check the applied fix from nothing to replacing with a space character [!]
-    # Convert Trible Spaces into one
+    # Convert Dashes into Spaces
     text = re.sub('–', ' ', text)
-    # Convert Double Spaces into one
-    text = re.sub('  ', ' ', text)
-    # Convert Double Spaces into one
-    text = re.sub('  ', ' ', text)
+    # Convert More than Two Spaces Sequences into one
+    text = re.sub('(\s){2}(\s)*', ' ', text)
     return text
 
 

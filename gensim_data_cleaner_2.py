@@ -43,10 +43,14 @@ def clean_exclusions(text):
     if str(text)=='nan':
         text = re.sub('nan', '', str(text))
     else:
+        # Global Exclusions
+        text = re.sub(r'said', ' ', text)
         # The Guardian Pre-defined Exclusions
         # text = re.sub(r'^(last modified on |first published on )?(mon|tue|wed|thu|fri|sat|sun) \d{1,2} (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec) \d{4} \d{1,2}\.\d{1,2}\s[a-zA-Z]{3,4}\b(\n|\r|\r\n)', '', text)
         text = re.sub(r'(last modified on |first published on )?(mon|tue|wed|thu|fri|sat|sun) \d{1,2} (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec) \d{4} \d{1,2}\.\d{1,2}\s[a-zA-Z]{3,4}', '', text)
         # ANSA Pre-defined Exclusions
+        text = re.sub(r'\(ansa\) \- \w[A-Za-z]+\, (\d{1,2} \w[A-Za-z]+|\w[A-Za-z]+ \d{1,2})', ' ', text)
+        text = re.sub(r'ansa', ' ', text)
         text = re.sub(r'åêåêåê', ' ', text)
         text = re.sub(r'åêåêåê', ' ', text)
         text = re.sub(r'				', ' ', text)

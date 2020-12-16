@@ -3,35 +3,69 @@
 import argparse
 import os
 import sys
-import gensim
 import scipy.sparse
-import pandas as pd
 import pickle
 
+from gensim import matutils, models
+from gensim.corpora import Dictionary
 from sklearn.feature_extraction import text
 from sklearn.feature_extraction.text import CountVectorizer
 
-# Define functions for stopwords, bigrams, trigrams and lemmatization
-def remove_stopwords(texts):
-    return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
+import re
+import numpy as np
+import pandas as pd
+from pprint import pprint
 
-def make_bigrams(texts):
-    return [bigram_mod[doc] for doc in texts]
+# Gensim
+import gensim
+import gensim.corpora as corpora
+from gensim.utils import simple_preprocess
+from gensim.models import CoherenceModel
 
-def make_trigrams(texts):
-    return [trigram_mod[bigram_mod[doc]] for doc in texts]
+# spacy for lemmatization
+import spacy
 
-def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
-    """https://spacy.io/api/annotation"""
-    texts_out = []
-    for sent in texts:
-        doc = nlp(" ".join(sent))
-        texts_out.append([token.lemma_ for token in doc if token.pos_ in allowed_postags])
-    return texts_out
+# Plotting tools
+import pyLDAvis
+import pyLDAvis.gensim  # don't skip this
+import matplotlib.pyplot as plt
 
-def sent_to_words(sentences):
-    for sentence in sentences:
-        yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))  # deacc=True removes punctuations
+# Enable logging for gensim - optional
+import logging
+
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.ERROR)
+
+import warnings
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+#
+# # Define functions for stopwords, bigrams, trigrams and lemmatization
+# def remove_stopwords(texts):
+#     return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
+#
+#
+# def make_bigrams(texts):
+#     return [bigram_mod[doc] for doc in texts]
+#
+#
+# def make_trigrams(texts):
+#     return [trigram_mod[bigram_mod[doc]] for doc in texts]
+#
+#
+# def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
+#     """https://spacy.io/api/annotation"""
+#     texts_out = []
+#     for sent in texts:
+#         doc = nlp(" ".join(sent))
+#         texts_out.append([token.lemma_ for token in doc if token.pos_ in allowed_postags])
+#     return texts_out
+#
+#
+# def sent_to_words(sentences):
+#     for sentence in sentences:
+#         yield (gensim.utils.simple_preprocess(str(sentence), deacc=True))  # deacc=True removes punctuations
+
 
 # Define the following (default) parameters before start topic modeling
 
@@ -89,7 +123,7 @@ print('Done')
 
 # Gensim also requires dictionary of the all terms and their respective location in the term-document matrix
 print('■ Loading pickled dictionary of all terms and their respective location in the T-D Matrix..', end='')
-cv = pickle.load(open("pickles/cv_stop_hd_content_FINAL_CyprusMail.pkl", "rb"))
+cv = pickle.load(open("pickles/cv_stop_ansa_final_content_dup_cn.pkl", "rb"))
 id2word = dict((v, k) for k, v in cv.vocabulary_.items())
 print('Done')
 
@@ -102,10 +136,26 @@ print('Done')
 # Now that we have the corpus (term-document matrix) and id2word (dictionary of location: term),
 # we need to specify two other parameters as well - the number of topics and the number of passes
 print('■ Latent Dirichlet Allocation (LDA) analysis is loading. Please wait..', end='')
-lda = models.LdaModel(corpus=corpus, id2word=id2word, num_topics=topics_num, passes=passes_num)
+lda = models.LdaModel(corpus=corpus, id2word=id2word, num_topics=topics_num, passes=passes_num, random_state=100,
+                      update_every=1, chunksize=100, alpha='auto', per_word_topics=True)
 print('Done')
 print('\n** ' + str(topics_num) + ' topics found in ' + str(passes_num) + ' passes:\n')
 print(lda.print_topics())
+
+# Compute Perplexity
+print('\nPerplexity: ', lda.log_perplexity(corpus))  # a measure of how good the model is. lower the better.
+
+# Compute Coherence Score
+word2id = dict((k, v) for k, v in cv.vocabulary_.items())
+print(word2id)
+d = corpora.Dictionary()
+d.id2token = id2word
+d.token2id = word2id
+
+# coherence_model_lda = CoherenceModel(model=lda, texts=corpus, dictionary=d, coherence='c_v')
+coherence_model_lda = CoherenceModel(model=lda, corpus=corpus, coherence='u_mass')
+coherence_lda = coherence_model_lda.get_coherence()
+print('\nCoherence Score: ', coherence_lda)
 
 # EXTRA STEP: Identify the topic
 

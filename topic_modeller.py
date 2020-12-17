@@ -15,7 +15,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 # Pickled DataFrame of Document-Term Matrix to Load
 pkl_file = 'pickles/dtm_stop_hd_content_FINAL_CyprusMail.pkl'
-# pkl_file = 'pickles/dtm_stop_ansa_final_content.pkl'
+pkl_dictionary = 'pickles/cv_stop_hd_content_FINAL_CyprusMail.pkl'
 
 # Number of topics
 topics_num = 10
@@ -38,12 +38,15 @@ print("Welcome to RISE TAG Topic Modeller\n")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-file", help="Pickled file to execute LDA analysis and extract topics", type=str)
+parser.add_argument("-dictionary", help="Pickled dictionary file to execute LDA analysis and extract topics", type=str)
 parser.add_argument("-topics", help="Number of topics to extract", type=int)
 parser.add_argument("-passes", help="Number of LDA passes", type=int)
 args = parser.parse_args()
 
 if args.file:
     pkl_file = args.file
+if args.dictionary:
+    pkl_dictionary = args.dictionary
 if args.topics:
     topics_num = args.topics
 if args.passes:
@@ -70,8 +73,9 @@ corpus = matutils.Sparse2Corpus(sparse_counts)
 print('Done')
 
 # Gensim also requires dictionary of the all terms and their respective location in the term-document matrix
-print('■ Loading pickled dictionary of all terms and their respective location in the T-D Matrix..', end='')
-cv = pickle.load(open("pickles/cv_stop_hd_content_FINAL_CyprusMail.pkl", "rb"))
+print('■ Loading pickled dictionary of all terms and their respective location in the T-D Matrix('+pkl_dictionary+')..',
+      end='')
+cv = pickle.load(open(pkl_dictionary, "rb"))
 id2word = dict((v, k) for k, v in cv.vocabulary_.items())
 print('Done')
 

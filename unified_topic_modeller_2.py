@@ -328,7 +328,7 @@ print('Done')
 print('■■■ Marking numeric references..', end='')
 round_nums = lambda x: clean_numbers(x)
 
-data_clean = pd.DataFrame(data_clean.Content.apply(round_nums))
+data_clean = pd.DataFrame(data_clean.Content.swifter.apply(round_nums))
 print('Done')
 
 # --<<<

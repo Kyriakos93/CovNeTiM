@@ -94,6 +94,14 @@ parser.add_argument("-file", help="Pickled file to execute LDA analysis and extr
 parser.add_argument("-dictionary", help="Pickled dictionary file to execute LDA analysis and extract topics", type=str)
 parser.add_argument("-topics", help="Number of topics to extract", type=int)
 parser.add_argument("-passes", help="Number of LDA passes", type=int)
+parser.add_argument("-optimize", default=False, help="Calculate perplexity and coherence scores to find the optimal "
+                                                     "number of topics per given dataset",
+                    dest='isOptEnabled', action='store_true')
+parser.add_argument("-start", help="Starting number of topics to start the optimization process", type=int)
+parser.add_argument("-step", help="A step value for increasing the number of topics during the optimization process",
+                    type=int)
+parser.add_argument("-limit", help="Limit number of topics to stop the optimization process",
+                    type=int)
 args = parser.parse_args()
 
 if args.file:
@@ -126,11 +134,13 @@ corpus = matutils.Sparse2Corpus(sparse_counts)
 print('Done')
 
 # Gensim also requires dictionary of the all terms and their respective location in the term-document matrix
-print('■ Loading pickled dictionary of all terms and their respective location in the T-D Matrix('+pkl_dictionary+')..',
-      end='')
+print(
+    '■ Loading pickled dictionary of all terms and their respective location in the T-D Matrix(' + pkl_dictionary + ')..',
+    end='')
 cv = pickle.load(open(pkl_dictionary, "rb"))
 id2word = dict((v, k) for k, v in cv.vocabulary_.items())
 print('Done')
+
 
 # Todo: Debug vocabulary here
 # print('Vocabulary\n')
@@ -138,39 +148,177 @@ print('Done')
 #     print(k)
 # exit()
 
-# Now that we have the corpus (term-document matrix) and id2word (dictionary of location: term),
-# we need to specify two other parameters as well - the number of topics and the number of passes
-print('■ Latent Dirichlet Allocation (LDA) analysis is loading. Please wait..', end='')
-lda = models.LdaModel(corpus=corpus, id2word=id2word, num_topics=topics_num, passes=passes_num, random_state=100,
-                      update_every=1, chunksize=100, alpha='auto', per_word_topics=True)
-print('Done')
-print('\n** ' + str(topics_num) + ' topics found in ' + str(passes_num) + ' passes:\n')
-print(lda.print_topics())
+def run_lda(corpus, id2word, topics_num, passes_num, alpha, enable_messages=True):
+    # Now that we have the corpus (term-document matrix) and id2word (dictionary of location: term),
+    # we need to specify two other parameters as well - the number of topics and the number of passes
+    #    Note for the LDA parameters: Use the following if you want to run LDA with fixed seed(s) or compute other stuff:
+    #    random_state=100, update_every=1, chunksize=100, per_word_topics=True
+    if enable_messages:
+        print('■ Latent Dirichlet Allocation (LDA) analysis is loading. Please wait..', end='')
+    lda_model = models.LdaModel(corpus=corpus, id2word=id2word, num_topics=topics_num, passes=passes_num, alpha=alpha)
 
-# Compute Perplexity
-print('\nPerplexity: ', lda.log_perplexity(corpus))  # a measure of how good the model is. lower the better.
+    return lda_model
 
-# Compute Coherence Score
-word2id = dict((k, v) for k, v in cv.vocabulary_.items())
-print(word2id)
-d = corpora.Dictionary()
-d.id2token = id2word
-d.token2id = word2id
 
-# coherence_model_lda = CoherenceModel(model=lda, texts=corpus, dictionary=d, coherence='c_v')
-coherence_model_lda = CoherenceModel(model=lda, corpus=corpus, coherence='u_mass')
-coherence_lda = coherence_model_lda.get_coherence()
-print('\nCoherence Score: ', coherence_lda)
+def compute_percoh_values(corpus, dictionary, passes, alpha, limit, start=2, step=1):
+    """
+    Compute perplexity and u_mass coherence for various number of topics
 
-# EXTRA STEP: Identify the topic
+    Parameters:
+    ----------
+    corpus : Gensim corpus
+    dictionary : Gensim dictionary
+    passes : Number of passes for the LDA execution
+    alpha : Alpha hyper-parameter value for the LDA execution
+    limit : Max num of topics
+    start : Starting value of topics to compute for the optimization process
+    step : Step value to increase the number of topics during the optimization process
 
-# # Create a new document-term matrix using only nouns and adjectives, also remove common words with max_df
-# add_stop_words = []
-# stop_words = text.ENGLISH_STOP_WORDS.union(add_stop_words)
-# cvna = CountVectorizer(stop_words=stop_words, max_df=.8)
-# data_cvna = cvna.fit_transform(data.Content)
-# data_dtmna = pd.DataFrame(data_cvna.toarray(), columns=cvna.get_feature_names(), index=data.Headline)
-#
-# # Let's take a look at which topics each content contains
-# corpus_transformed = lda[corpus]
-# list(zip([a for [(a,b)] in corpus_transformed], data_dtmna.index))
+    Returns:
+    -------
+    model_list : List of LDA topic models
+    perplexity_values : Perplexity values corresponding to the LDA model with respective number of topics
+    coherence_values : Coherence values corresponding to the LDA model with respective number of topics
+    """
+    perplexity_values = []
+    coherence_values = []
+    model_list = []
+    for num_topics in range(start, limit, step):
+        print('■■ Running LDA for ' + str(num_topics) + ' topics in ' + str(passes_num) + ' passes..', end='')
+        lda_model = run_lda(corpus, dictionary.id2token, num_topics, passes, alpha, enable_messages=False)
+        model_list.append(lda_model)
+
+        # Compute Perplexity
+        perplexity_score = lda_model.log_perplexity(corpus)  # a measure of how good the model is. lower the better.
+        perplexity_values.append(perplexity_score)
+
+        # Compute Coherence Score
+
+        # coherence_model_lda = CoherenceModel(model=lda, texts=corpus, dictionary=d, coherence='c_v')
+        coherence_model_lda = CoherenceModel(model=lda_model, corpus=corpus, coherence='u_mass')
+        coherence_score = coherence_model_lda.get_coherence()
+
+        coherence_values.append(coherence_score)
+
+        print('Done')
+
+    return model_list, perplexity_values, coherence_values
+
+
+def save_score(values, save_as):
+    with open('output/' + save_as + '.txt', 'w') as f:
+        for item in values:
+            f.write("%s\n" % item)
+        f.close()
+    return True
+
+
+if args.isOptEnabled:
+    print('■ LDA Optimization Process is starting..')
+
+    start_from = 2
+    step = 1
+    limit = 20
+
+    if args.start:
+        start_from = args.start
+    if args.step:
+        step = args.step
+    if args.limit:
+        limit = args.limit
+
+    # Loop for increasing the number of topics and calculating the scores
+    # cur_num_of_topics = start_from
+    # while cur_num_of_topics <= limit:
+    #     lda = run_lda(corpus, id2word, cur_num_of_topics, passes_num, 'auto')
+    #
+
+    # Construct Dictionary
+    word2id = dict((k, v) for k, v in cv.vocabulary_.items())
+    d = corpora.Dictionary()
+    d.id2token = id2word
+    d.token2id = word2id
+    #
+    #     cur_num_of_topics += step
+    model_list, perplexity_values, coherence_values = compute_percoh_values(corpus=corpus, dictionary=d,
+                                                                            passes=passes_num, alpha='auto',
+                                                                            limit=limit, start=start_from, step=step)
+
+    print('■■ Generating plots for perplexity and coherence scores..', end='')
+
+    # Show graph for Coherence Score
+    x = range(start_from, limit, step)
+    plt.plot(x, coherence_values)
+    plt.xlabel("Num Topics")
+    plt.ylabel("Coherence score")
+    plt.legend(("coherence_values"), loc='best')
+    # plt.show()
+    plt.savefig('output/coh_' + os.path.basename(pkl_file).replace('.pkl', '') + '.png')
+    plt.close()
+
+    # Show graph for Perplexity Score
+    x = range(start_from, limit, step)
+    plt.plot(x, perplexity_values)
+    plt.xlabel("Num Topics")
+    plt.ylabel("Perplexity score")
+    plt.legend(("perplexity_values"), loc='best')
+    # plt.show()
+    plt.savefig('output/per_' + os.path.basename(pkl_file).replace('.pkl', '') + '.png')
+    plt.close()
+
+    print('Done')
+
+    print('■■ Saving list of number of topics values to disk..', end='')
+    num_of_topics_values = []
+    for num in range(start_from, limit, step):
+        num_of_topics_values.append(num)
+
+    save_score(values=num_of_topics_values, save_as='num_of_topics_values')
+    print('Done')
+
+    print('■■ Saving list of perplexity values to disk..', end='')
+    save_score(values=perplexity_values, save_as='perplexity_values')
+    print('Done')
+
+    print('■■ Saving list of coherence values to disk..', end='')
+    save_score(values=coherence_values, save_as='coherence_values')
+    print('Done')
+
+    print('Optimization process finished. Exiting..')
+
+    exit()
+else:
+    lda = run_lda(corpus, id2word, topics_num, passes_num, 'auto')
+
+    print('Done')
+    print('\n** ' + str(topics_num) + ' topics found in ' + str(passes_num) + ' passes:\n')
+    print(lda.print_topics())
+
+    # Compute Perplexity
+    print('\nPerplexity: ', lda.log_perplexity(corpus))  # a measure of how good the model is. lower the better.
+
+    # Compute Coherence Score
+    word2id = dict((k, v) for k, v in cv.vocabulary_.items())
+    # Debugging:
+    # print(word2id)
+    d = corpora.Dictionary()
+    d.id2token = id2word
+    d.token2id = word2id
+
+    # coherence_model_lda = CoherenceModel(model=lda, texts=corpus, dictionary=d, coherence='c_v')
+    coherence_model_lda = CoherenceModel(model=lda, corpus=corpus, coherence='u_mass')
+    coherence_lda = coherence_model_lda.get_coherence()
+    print('\nCoherence Score: ', coherence_lda)
+
+    # EXTRA STEP: Identify the topic
+
+    # # Create a new document-term matrix using only nouns and adjectives, also remove common words with max_df
+    # add_stop_words = []
+    # stop_words = text.ENGLISH_STOP_WORDS.union(add_stop_words)
+    # cvna = CountVectorizer(stop_words=stop_words, max_df=.8)
+    # data_cvna = cvna.fit_transform(data.Content)
+    # data_dtmna = pd.DataFrame(data_cvna.toarray(), columns=cvna.get_feature_names(), index=data.Headline)
+    #
+    # # Let's take a look at which topics each content contains
+    # corpus_transformed = lda[corpus]
+    # list(zip([a for [(a,b)] in corpus_transformed], data_dtmna.index))

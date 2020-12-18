@@ -482,7 +482,7 @@ def compute_percoh_values(corpus, dictionary, passes, alpha, limit, start=2, ste
     for num_topics in range(start, limit, step):
         print('■■ Running LDA for ' + str(num_topics) + ' topics in ' + str(passes_num) + ' passes..', end='')
         lda_model = run_lda(corpus, dictionary.id2token, num_topics, passes, alpha, enable_messages=False)
-        model_list.append(lda_model)
+        # model_list.append(lda_model)
 
         # Compute Perplexity
         perplexity_score = lda_model.log_perplexity(corpus)  # a measure of how good the model is. lower the better.

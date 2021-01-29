@@ -135,8 +135,8 @@ def clean_numbers(text):
 
         # Numbers having cm, centimeters, m, meters, km, kilometers
         text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(mm|cm|m|km|millimeter(s)?|millimetre(s)?|centimeter(s)?|centimetre(s)?|meter(s)?|metre(s)?|kilometer(s)?|kilometre(s)?)\b', ' [COVMEASURES] ', text)
-        text = re.sub(r'\d+(\,\d+)? ?feet', ' [COVMESAURES] ', text)
-        text = re.sub(r'\d{1,2} ?inch(es)?', ' [COVMESAURES] ', text)
+        text = re.sub(r'\d+(\,\d+)? ?feet', ' [COVMEASURES] ', text)
+        text = re.sub(r'\d{1,2} ?inch(es)?', ' [COVMEASURES] ', text)
 
         # Time reference
         text = re.sub(r'(\d{1,2}\:\d{2}( ?(a\.?m\.?|p\.?m\.?))?( ?[a-zA-Z]{3,4}((\-|\+)\d{1,2})?)?)|(\d{1,2}( ?(a\.?m\.?|p\.?m\.?)){1}( ?[a-zA-Z]{3,4}((\-|\+)\d{1,2})?)?)', ' [COVTIME] ', text)

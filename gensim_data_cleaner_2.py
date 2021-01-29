@@ -12,6 +12,8 @@ import string
 import pickle
 import pandas as pd
 from pathlib import Path
+
+from nltk import word_tokenize
 from sklearn.feature_extraction import text
 from sklearn.feature_extraction.text import CountVectorizer
 
@@ -116,7 +118,7 @@ def clean_numbers(text):
         # Covid codename reference
         text = re.sub(r'covid-19', ' [COVCODENAME] ', text)
         text = re.sub(r'covid19', ' [COVCODENAME] ', text)
-        text = re.sub(r'SARS-COV(-19)?', ' [COVCODENAME] ', text)
+        text = re.sub(r'sars-cov-2', ' [COVCODENAME] ', text)
         text = re.sub(r'coronavirus', ' [COVCODENAME] ', text)
 
         # Currency reference
@@ -132,7 +134,7 @@ def clean_numbers(text):
         text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(mg|g|milligrams|grams)\b', ' [COVDOSE] ', text)
 
         # Numbers having cm, centimeters, m, meters, km, kilometers
-        text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(mm|cm|m|km|millimeter(s)?|millimetre(s)?|centimeter(s)?|centimetre(s)?|meter(s)?|metre(s)?|kilometer(s)?|kilometre(s)?)\b', ' [COVMESAURES] ', text)
+        text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(mm|cm|m|km|millimeter(s)?|millimetre(s)?|centimeter(s)?|centimetre(s)?|meter(s)?|metre(s)?|kilometer(s)?|kilometre(s)?)\b', ' [COVMEASURES] ', text)
         text = re.sub(r'\d+(\,\d+)? ?feet', ' [COVMESAURES] ', text)
         text = re.sub(r'\d{1,2} ?inch(es)?', ' [COVMESAURES] ', text)
 
@@ -222,6 +224,20 @@ def clean_text_round2(text):
     text = re.sub('(\s){2}(\s)*', ' ', text)
     return text
 
+def exclude_words(t):
+    # If more than half of the media have it as a top word, exclude it from the list (optional step for later)
+    add_stop_words = ['said', 'åêåêåê']
+
+    # Add new stop words
+    stop_words = text.ENGLISH_STOP_WORDS.union(add_stop_words)
+
+    words = t.split(' ')
+    final_t = ''
+    for w in words:
+        if w not in stop_words:
+            final_t += ' ' + w
+            # t = re.sub(w, '', t)
+    return final_t
 
 # STEP 1: Corpus Creation
 
@@ -270,10 +286,32 @@ for index, row in data_df.iterrows():
         docs.append(str(row['Content']).encode(encoding='UTF-8', errors='strict'))
 print('Done')
 
+print('■■■ Lowercase transformation..', end='')
+round_lw = lambda x: clean_lowercase(x)
+
+data_clean = pd.DataFrame(data_df.Content.apply(round_lw))
+print('Done')
+
 print('■ Removing English Stop-Words..', end='')
-cv = CountVectorizer(stop_words='english')
-data_cv = cv.fit_transform(docs)
+
+# If more than half of the media have it as a top word, exclude it from the list (optional step for later)
+add_stop_words = ['said', 'åêåêåê']
+
+# Add new stop words
+stop_words = text.ENGLISH_STOP_WORDS.union(add_stop_words)
+
+cv = CountVectorizer(stop_words=stop_words)
+data_cv = cv.fit_transform(data_clean.Content)
+# Debug stop-words issue
+# print('cv.stop_words = ' + str(cv.stop_words))
+# exit()
+# <<
 data_dtm = pd.DataFrame(data_cv.toarray(), columns=cv.get_feature_names(), index=headlines)
+
+# TODO: Tidy up the latest modification for stop_words bug fix
+# remove_stopwords = lambda x: exclude_words(x)
+# data_clean = pd.DataFrame(data_clean.Content.apply(remove_stopwords))
+
 print('Done')
 # print(data_dtm)
 
@@ -281,12 +319,6 @@ print('Done')
 print('■ Cleaning data contents..')
 
 # -->>> Additional cleaning steps for numeric references and code snippets cleaning
-
-print('■■■ Lowercase transformation..', end='')
-round_lw = lambda x: clean_lowercase(x)
-
-data_clean = pd.DataFrame(data_df.Content.apply(round_lw))
-print('Done')
 
 print('■■■ Marking code snippets..', end='')
 round_code = lambda x: clean_code(x)
@@ -336,7 +368,7 @@ if args.isGenPickEnabled:
     # STEP 3: Generate Document-Term Matrix
     # Create a document-term matrix using CountVectorizer, and exclude common English stop words
     print('■ Generating Document-Term Matrix using sklearn..', end='')
-    cv = CountVectorizer(stop_words='english')
+    cv = CountVectorizer(stop_words=stop_words)
     data_cv = cv.fit_transform(data_clean.Content)
     data_dtm = pd.DataFrame(data_cv.toarray(), columns=cv.get_feature_names(),index=headlines)
     print(data_dtm)
@@ -348,6 +380,7 @@ if args.isGenPickEnabled:
     data_dtm.to_pickle('pickles/corpus_cl_'+filename+'.pkl')
     print('[Pickle Saved at pickles/corpus_cl_'+filename+'.pkl]')
 
+
 if args.export:
     export_path = args.export
 
@@ -358,7 +391,24 @@ if args.export:
     data_exp = pd.DataFrame()
     data_exp['Headline'] = headlines
     data_exp['Content'] = data_clean.Content
-    data_exp.to_csv(export_path)
+
+    # TODO: Tidy up the latest additions for the stop_words fix
+    # Remove stop words (not a location-based method)
+    # print('Stop_words = ' + str(list(stop_words)))
+    # data_exp['Content'].apply(lambda k: [item for item in k if item not in str(list(stop_words))])
+    # remove_stopwords = lambda x: [item for item in x if item not in stop_words]
+    remove_stopwords = lambda x: exclude_words(x)
+    data_exp = pd.DataFrame(data_exp.Content.apply(remove_stopwords))
+
+    round2 = lambda x: clean_text_round2(x)
+
+    data_exp = pd.DataFrame(data_exp.Content.apply(round2))
+
+    data_export = pd.DataFrame()
+    data_export['Headline'] = headlines
+    data_export['Content'] = data_exp.Content
+
+    data_export.to_csv(export_path)
     print('Done')
 
 if args.isGenPickEnabled:

@@ -188,7 +188,7 @@ def clean_numbers(text):
         text = re.sub(r'\d{1}0{1}s{1}', ' [COVAGE] ', text)
 
         # Other semantics on covid numeric references
-        text = re.sub(r'\d+((\,|\.)\d+)? ?(percent|\%)', ' [COVPERCENTAGE] ', text)
+        text = re.sub(r'\d+((\,|\.)\d+)? ?(per( )?cent|\%)', ' [COVPERCENTAGE] ', text)
 
         # Coronavirus Deaths references
         text = re.sub(r'\d+((\,|\.)\d+)?( new)?( coronavirus)? death(s)?\b', ' [COVDEATHS] ', text)

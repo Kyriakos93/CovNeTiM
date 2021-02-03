@@ -53,6 +53,8 @@ def clean_exclusions(text):
         # ANSA Pre-defined Exclusions
         text = re.sub(r'\(ansa\) \- \w[A-Za-z]+\, (\d{1,2} \w[A-Za-z]+|\w[A-Za-z]+ \d{1,2})', ' ', text)
         text = re.sub(r'ansa', ' ', text)
+        text = re.sub(r'¬†', ' ', text)
+        text = re.sub(r'Â', ' ', text)
         text = re.sub(r'åêåêåê', ' ', text)
         text = re.sub(r'åêåêåê', ' ', text)
         text = re.sub(r'				', ' ', text)
@@ -115,17 +117,12 @@ def clean_numbers(text):
         # Debug input string
         # print('NEW_TEXT>>>' + text)
 
-        # Covid codename reference
-        text = re.sub(r'covid-19', ' [COVCODENAME] ', text)
-        text = re.sub(r'covid19', ' [COVCODENAME] ', text)
-        text = re.sub(r'sars-cov-2', ' [COVCODENAME] ', text)
-        text = re.sub(r'coronavirus', ' [COVCODENAME] ', text)
-
         # Currency reference
-        text = re.sub(r'(\$|\€|\£){1} ?\d+\.?\d* ?(m|bn|million|billion|trillion)', ' [COVCURRENCY] ', text)
-        text = re.sub(r'\d+\.?\d* ?(m|bn|million|billion|trillion)', ' [COVCURRENCY] ', text)
+        # text = re.sub(r'\d+\.?\d* ?(m|bn|million|billion|trillion)', ' [COVCURRENCY] ', text)
         text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(m|bn|million|billion|trillion)? ?(\$|\€|\£)', ' [COVCURRENCY] ', text)
-        text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(euro(s)?|dollar(s)?|pound(s)?|eur|EUR|usd|USD|gbp|GBP)', ' [COVCURRENCY] ', text)
+        text = re.sub(r'\d{1,3}((\,|\.)?\d{1,3}?)* ?(m|bn|million|billion|trillion)? ?(euro(s)?|dollar(s)?|pound(s)?|eur|EUR|usd|USD|gbp|GBP)', ' [COVCURRENCY] ', text)
+        # text = re.sub(r'(\$|\€|\£){1} ?\d+\.?\d* ?(m|bn|million|billion|trillion)?\b', ' [COVCURRENCY] ', text)
+        text = re.sub(r'(\$|\€|\£){1} ?\d{1,3}((\,|\.)?\d{1,3}?)* ?(m|bn|million|billion|trillion)?\b', ' [COVCURRENCY] ', text)
 
         # - [COVDOSE] .. Numbers having mg, milligrams, g, grams
         # - [COVMEASURES] .. Numbers having cm, centimeters, m, meters, k, kilometers
@@ -139,24 +136,24 @@ def clean_numbers(text):
         text = re.sub(r'\d{1,2} ?inch(es)?', ' [COVMEASURES] ', text)
 
         # Time reference
-        text = re.sub(r'(\d{1,2}\:\d{2}( ?(a\.?m\.?|p\.?m\.?))?( ?[a-zA-Z]{3,4}((\-|\+)\d{1,2})?)?)|(\d{1,2}( ?(a\.?m\.?|p\.?m\.?)){1}( ?[a-zA-Z]{3,4}((\-|\+)\d{1,2})?)?)', ' [COVTIME] ', text)
+        text = re.sub(r'(\d{1,2}\:\d{2}( ?(a\.?m\.?|p\.?m\.?))?( ?[a-zA-Z]{3,4}((\-|\+)\d{1,2})?)?)\b|(\d{1,2}( ?(a\.?m\.?|p\.?m\.?)){1}( ?[a-zA-Z]{3,4}((\-|\+)\d{1,2})?)?\b)', ' [COVTIME] ', text)
         text = re.sub(r'\d+(\,|\.)?(\d+)? ?(year(s)?|day(s)?|month(s)?|week(s)?)', ' [COVTIME] ', text)
         text = re.sub(r'\d+(\-| )?(hour(s)?|minute(s)?|second(s)?|millisecond(s)?)', ' [COVTIME] ', text)
         text = re.sub(r'\d+(\-| )?day', ' [COVTIME] ', text)
 
         # Date reference
-        # TODO: INCLUDE ADDITIONAL PATTERNS (eg. 9/11, 11/2020) --> DONE
-        text = re.sub(r'((J|j)anuary|(F|f)ebruary|(M|m)arch|(A|a)pril|(M|m)ay|(J|j)une|(J|j)uly|(A|a)ugust|(S|s)eptember|(O|o)ctober|(N|n)ovember|(D|d)ecember|(J|j)an\.?|(F|f)eb\.?|(M|m)ar\.?|(A|a)pr\.?|(M|m)ay\.?|(J|j)un\.?|(J|j)ul\.?|(A|a)ug\.?|(S|s)ep\.?|(O|o)ct\.?|(N|n)ov\.?|(D|d)ec\.?) \d{1,2}(st|nd|rd|th)?(\,? ((20\d{2})|(19\d{2})))?', ' [COVDATE] ', text)
-        text = re.sub(r'((J|j)anuary|(F|f)ebruary|(M|m)arch|(A|a)pril|(M|m)ay|(J|j)une|(J|j)uly|(A|a)ugust|(S|s)eptember|(O|o)ctober|(N|n)ovember|(D|d)ecember){1} \d{1,2}(st|nd|rd|th)?(\, ((20\d{2})|(19\d{2})))?', ' [COVDATE] ', text)
-        text = re.sub(r'\d{1,2}(st|nd|rd|th)? ((J|j)anuary|(F|f)ebruary|(M|m)arch|(A|a)pril|(M|m)ay|(J|j)une|(J|j)uly|(A|a)ugust|(S|s)eptember|(O|o)ctober|(N|n)ovember|(D|d)ecember|(J|j)an|(F|f)eb|(M|m)ar|(A|a)pr|(M|m)ay|(J|j)un|(J|j)ul|(A|a)ug|(S|s)ep|(O|o)ct|(N|n)ov|(D|d)ec)( ((20\d{2})|(19\d{2})))?', ' [COVDATE] ', text)
-        text = re.sub(r'\d{1,2}(st|nd|rd|th)? ((J|j)anuary|(F|f)ebruary|(M|m)arch|(A|a)pril|(M|m)ay|(J|j)une|(J|j)uly|(A|a)ugust|(S|s)eptember|(O|o)ctober|(N|n)ovember|(D|d)ecember)', ' [COVDATE] ', text)
+        text = re.sub(r'((J|j)anuary|(F|f)ebruary|(M|m)arch|(A|a)pril|(M|m)ay|(J|j)une|(J|j)uly|(A|a)ugust|(S|s)eptember|(O|o)ctober|(N|n)ovember|(D|d)ecember|(J|j)an\.?|(F|f)eb\.?|(M|m)ar\.?|(A|a)pr\.?|(M|m)ay\.?|(J|j)un\.?|(J|j)ul\.?|(A|a)ug\.?|(S|s)ep\.?|(O|o)ct\.?|(N|n)ov\.?|(D|d)ec\.?) \d{1,2}(st|nd|rd|th)?\b(\,? (\d{4}))', ' [COVDATE] ', text)
+        # text = re.sub(r'((J|j)anuary|(F|f)ebruary|(M|m)arch|(A|a)pril|(M|m)ay|(J|j)une|(J|j)uly|(A|a)ugust|(S|s)eptember|(O|o)ctober|(N|n)ovember|(D|d)ecember){1} \d{1,2}(st|nd|rd|th)?\b(\, (\d{4}))?', ' [COVDATE] ', text)
+        text = re.sub(r'\d{1,2}(st|nd|rd|th)? ((J|j)anuary|(F|f)ebruary|(M|m)arch|(A|a)pril|(M|m)ay|(J|j)une|(J|j)uly|(A|a)ugust|(S|s)eptember|(O|o)ctober|(N|n)ovember|(D|d)ecember|(J|j)an\.?|(F|f)eb\.?|(M|m)ar\.?|(A|a)pr\.?|(M|m)ay\.?|(J|j)un\.?|(J|j)ul\.?|(A|a)ug\.?|(S|s)ep\.?|(O|o)ct\.?|(N|n)ov\.?|(D|d)ec\.?)( (\d{4}))', ' [COVDATE] ', text)
+        text = re.sub(r'\d{1,2}(st|nd|rd|th)? ((J|j)anuary|(F|f)ebruary|(M|m)arch|(A|a)pril|(M|m)ay|(J|j)une|(J|j)uly|(A|a)ugust|(S|s)eptember|(O|o)ctober|(N|n)ovember|(D|d)ecember|(J|j)an\.?|(F|f)eb\.?|(M|m)ar\.?|(A|a)pr\.?|(M|m)ay\.?|(J|j)un\.?|(J|j)ul\.?|(A|a)ug\.?|(S|s)ep\.?|(O|o)ct\.?|(N|n)ov\.?|(D|d)ec\.?)\b', ' [COVDATE] ', text)
+        text = re.sub(r'((J|j)anuary|(F|f)ebruary|(M|m)arch|(A|a)pril|(M|m)ay|(J|j)une|(J|j)uly|(A|a)ugust|(S|s)eptember|(O|o)ctober|(N|n)ovember|(D|d)ecember|(J|j)an\.?|(F|f)eb\.?|(M|m)ar\.?|(A|a)pr\.?|(M|m)ay\.?|(J|j)un\.?|(J|j)ul\.?|(A|a)ug\.?|(S|s)ep\.?|(O|o)ct\.?|(N|n)ov\.?|(D|d)ec\.?) \d{1,2}(st|nd|rd|th)?\b', ' [COVDATE] ', text)
+        text = re.sub(r'((J|j)anuary|(F|f)ebruary|(M|m)arch|(A|a)pril|(M|m)ay|(J|j)une|(J|j)uly|(A|a)ugust|(S|s)eptember|(O|o)ctober|(N|n)ovember|(D|d)ecember|(J|j)an\.?|(F|f)eb\.?|(M|m)ar\.?|(A|a)pr\.?|(M|m)ay\.?|(J|j)un\.?|(J|j)ul\.?|(A|a)ug\.?|(S|s)ep\.?|(O|o)ct\.?|(N|n)ov\.?|(D|d)ec\.?)(\,? (\d{4}))\b', ' [COVDATE] ', text)
         text = re.sub(r'\d{1,2}\/(\d{4}|\d{1,2})', ' [COVDATE] ', text)
         text = re.sub(r'\d+(/)+\d+(/)+\d+', ' [COVDATE] ', text)
 
         # Year reference
         text = re.sub(r'(1900|2000)s', ' [COVYEAR] ', text)
         text = re.sub(r'(20\d{2})|(19\d{2})', ' [COVYEAR] ', text)
-
 
         # Day reference
         text = re.sub(r'((M|m)onday|(T|t)uesday|(W|w)ednesday|(T|t)hursday|(F|f)riday|(S|s)aturday|(S|s)unday)', ' [COVDAY] ', text)
@@ -165,7 +162,7 @@ def clean_numbers(text):
         text = re.sub(r'(J|j)anuary|(F|f)ebruary|(M|m)arch|(A|a)pril|(M|m)ay|(J|j)une|(J|j)uly|(A|a)ugust|(S|s)eptember|(O|o)ctober|(N|n)ovember|(D|d)ecember', ' [COVMONTH] ', text)
 
         # Age References
-        text = re.sub(r'(\d{1,2}\-year\-old)|(\d{1,2} year(s)? old)', ' [COVAGE] ', text)
+        text = re.sub(r'(\d{1,3}\-year\-old)|(\d{1,3} year(s)? old)', ' [COVAGE] ', text)
         text = re.sub(r'mid\-(\d{1}(0s){1})', ' [COVAGE] ', text)
         text = re.sub(r'\d{1}0{1}s{1}', ' [COVAGE] ', text)
 
@@ -173,23 +170,62 @@ def clean_numbers(text):
         text = re.sub(r'\d+((\,|\.)\d+)? ?(percent|\%)', ' [COVPERCENTAGE] ', text)
 
         # Coronavirus Deaths references
-        text = re.sub(r'\d+( new)?( coronavirus)? death(s)?\b', ' [COVDEATHS] ', text)
+        text = re.sub(r'\d+((\,|\.)\d+)?( new)?( coronavirus)? death(s)?\b', ' [COVDEATHS] ', text)
+        text = re.sub(r'\d+((\,|\.)\d+)* people( have)? died', ' [COVDEATHS] ', text)
+        text = re.sub(r'\d+((\,|\.)\d+)* (fresh|more) death(s)?', ' [COVDEATHS] ', text)
+        text = re.sub(r'death toll( of | at | )\d+((\,|\.)\d+)*', ' [COVDEATHS] ', text)
+        text = re.sub(r'\d+((\,|\.)\d+)* people( have been)? killed', ' [COVDEATHS] ', text)
+        text = re.sub(r'killing \d+((\,|\.)\d+)* people', ' [COVDEATHS] ', text)
+        text = re.sub(r'killed( nearly)? \d+((\,|\.)\d+)* people', ' [COVDEATHS] ', text)
 
         # Coronavirus Tests references
-        text = re.sub(r'\d+( new)?( coronavirus| covid)? test(s)?', ' [COVTESTS] ', text)
+        text = re.sub(r'\d+((\,|\.)\d+)?( new)?( coronavirus| covid)? test(s)?', ' [COVTESTS] ', text)
+        text = re.sub(r'\d+((\,|\.)\d+)*( have| were)? tested', ' [COVTESTS] ', text)
 
         # Coronavirus Cases references
-        text = re.sub(r'\d+((\,|\.)\d+)*( confirmed)?( coronavirus)? case(s)?', ' [COVCASES] ', text)
-
-        # Coronavirus New Cases references
-        text = re.sub(r'\d+((\,|\.)\d+)* new( confirmed)?( coronavirus| covid)?( confirmed)? case(s)?', ' [COVNEWCASES] ', text)
+        text = re.sub(r'\d+((\,|\.)\d+)* ?(m|bn|million|billion|trillion)?( confirmed)?( coronavirus| covid| suspected| additional)? case(s)?', ' [COVCASES] ', text)
+        text = re.sub(r'\d+((\,|\.)\d+)* ?(m|bn|million|billion|trillion)? new( confirmed)?( coronavirus| covid)?( confirmed)? case(s)?', ' [COVCASES] ', text)
+        # TODO: Add more regex in COVCASES
+        text = re.sub(r'\d+((\,|\.)\d+)* people( currently)? infected', ' [COVCASES] ', text)
+        text = re.sub(r'infected( nearly)? \d+((\,|\.)\d+)*', ' [COVCASES] ', text)
+        text = re.sub(r'\d+((\,|\.)\d+)*( new)? infections', ' [COVCASES] ', text)
 
         # Numbers references written in full-text
-        text = re.sub(r'(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirdy|forty|fifty|sixty|seventy|eighty|ninety|hundred(s)?|thousand(s)?|million(s)?|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth)\b', ' [COVNUMASWORD] ', text)
+        text = re.sub(r'\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirdy|forty|fifty|sixty|seventy|eighty|ninety|hundred(s)?|thousand(s)?|million(s)?|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth)\b', ' [COVNUMASWORD] ', text)
+
+        # Telephone numbers
+        # CY
+        # Landlines
+        text = re.sub(r'telephone(s)?(\:)?.{0,2}((\+|00)357 ?)?2\d ?\d{6}', ' [COVTELEPHONE] ', text)
+        text = re.sub(r'(tel|call)(\:)?.{0,2}((\+|00)357 ?)?2\d ?\d{6}', ' [COVTELEPHONE] ', text)
+        # Mobiles
+        text = re.sub(r'(telephone|mobile)(s)?(\:)?.{0,2}((\+|00)357 ?)?9\d ?\d{6}', ' [COVTELEPHONE] ', text)
+        text = re.sub(r'(tel|mob|call)(\:)?.{0,2}((\+|00)357 ?)?9\d ?\d{6}', ' [COVTELEPHONE] ', text)
+        # IT
+        # Landlines
+        text = re.sub(r'telephone(s)?(\:)?.{0,2}((\+|00)39 ?)?0\d{1,2} ?3\d{3} ?\d{3} ?\d{4}', ' [COVTELEPHONE] ', text)
+        text = re.sub(r'(tel|call)(\:)?.{0,2}((\+|00)39 ?)?0\d{1,2} ?3\d{3} ?\d{3} ?\d{4}', ' [COVTELEPHONE] ', text)
+        # Mobiles
+        text = re.sub(r'(telephone|mobile)(s)?(\:)?.{0,2}((\+|00)39 ?)?\d{2} ?\d{3} ?\d{4}', ' [COVTELEPHONE] ', text)
+        text = re.sub(r'(tel|mob|call)(\:)?.{0,2}((\+|00)39 ?)?\d{2} ?\d{3} ?\d{4}', ' [COVTELEPHONE] ', text)
+        # UK
+        # Landlines/Mobiles
+        text = re.sub(r'(telephone|mobile)(s)?(\:)?.{0,2}((\+|00)44 ?)?0?\d{4} ?\d{6}', ' [COVTELEPHONE] ', text)
+        text = re.sub(r'(tel|mob|call)(\:)?.{0,2}((\+|00)44 ?)?0?\d{4} ?\d{6}', ' [COVTELEPHONE] ', text)
+        # US
+        # Landlines/Mobiles
+        text = re.sub(r'(telephone|mobile)(s)?(\:)?.{0,2}((\+|00)1 ?)?\(?\d{3}\)? ?\d{3}( |-)?\d{4}', ' [COVTELEPHONE] ', text)
+        text = re.sub(r'(tel|mob|call)(\:)?.{0,2}((\+|00)1 ?)?\(?\d{3}\)? ?\d{3}( |-)?\d{4}', ' [COVTELEPHONE] ', text)
+
+        # Covid codename reference
+        text = re.sub(r'covid-19', ' [COVCODENAME] ', text)
+        text = re.sub(r'covid19', ' [COVCODENAME] ', text)
+        text = re.sub(r'sars-cov-2', ' [COVCODENAME] ', text)
+        text = re.sub(r'coronavirus', ' [COVCODENAME] ', text)
 
         # Number references in parentheses and brackets
-        text = re.sub(r'\[\d+(\.{1,3}|\,)?\d*\]', '[BRANUM]', text)
-        text = re.sub(r'\(\d+(\.{1,3}|\,)?\d*\)', '[PARNUM]', text)
+        text = re.sub(r'\[\d+(\.{1,3}|\,)?\d*\]', ' [BRANUM] ', text)
+        text = re.sub(r'\(\d+(\.{1,3}|\,)?\d*\)', ' [PARNUM] ', text)
 
         # Other general numeric references
         text = re.sub(r'\b\d{1,3}((\,|\.)?\d{1,3}?)*\b', ' [COVNUM] ', text)
@@ -209,7 +245,19 @@ def clean_text_round1(text):
         text = re.sub('\w*\d\w*', '', text)
         # text = text.lower()
         # text = re.sub('\[.*?\]', '', text)
+
+        # Replace 's occurrences with a single space
+        text = re.sub(r'\'s', ' ', text)
+
+        # Replace consequent punctuation with a single space
+        text = re.sub(r'[`~!@#$%^&*()_=+\[\]{}\\\|;:\"\'<>.,/?]{2}', ' ', text)
+
+        # Replace dots with a single space
+        text = re.sub(r'\.', ' ', text)
+
+        # Escape any other punctuation remains
         text = re.sub('[%s]' % re.escape(string.punctuation), '', text)
+        text = re.sub(r'u s', 'u_s', text)  # us acronym fix
     return text
 
 
